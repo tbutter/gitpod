@@ -86,7 +86,8 @@ const vmSlices = {
     START_KUBECTL_PORT_FORWARDS: 'Start kubectl port forwards',
     COPY_CERT_MANAGER_RESOURCES: 'Copy CertManager resources from core-dev',
     INSTALL_LETS_ENCRYPT_ISSUER: 'Install Lets Encrypt issuer',
-    KUBECONFIG: 'Getting kubeconfig'
+    KUBECONFIG: 'Getting kubeconfig',
+    EXTERNAL_LOGGING: 'Install credentials to send logs from fluent-bit to GCP'
 }
 
 export function parseVersion(context) {
@@ -351,6 +352,9 @@ export async function build(context, version) {
         werft.done(vmSlices.KUBECONFIG)
 
         exec(`kubectl apply -f clouddns-dns01-solver-svc-acct.yaml -f letsencrypt-issuer.yaml`, { slice: vmSlices.INSTALL_LETS_ENCRYPT_ISSUER, dontCheckRc: true })
+
+        VM.installFluentBit({namespace: 'default', slice: vmSlices.EXTERNAL_LOGGING});
+
         werft.done(vmSlices.INSTALL_LETS_ENCRYPT_ISSUER)
 
         issueMetaCerts(PROXY_SECRET_NAME, "default", domain, withVM)
