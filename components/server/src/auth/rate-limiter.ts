@@ -163,6 +163,7 @@ function getConfig(config: RateLimiterConfig): RateLimiterConfig {
         "adminSetProfessionalOpenSource":  { group: "default", points: 1 },
         "adminGrantExtraHours":  { group: "default", points: 1 },
         "checkout":  { group: "default", points: 1 },
+        "teamCheckout":  { group: "default", points: 1 },
         "createPortalSession":  { group: "default", points: 1 },
         "getAccountStatement":  { group: "default", points: 1 },
         "getAppliedCoupons":  { group: "default", points: 1 },

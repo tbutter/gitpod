@@ -430,7 +430,7 @@ export default function () {
                     ? <progress value={currentPlan.hoursPerMonth - accountStatement.remainingHours} max={currentPlan.hoursPerMonth} />
                     : <progress value="0" max="100" />}
                 <p className="text-sm">
-                    <a className={`text-blue-light hover:underline" ${isChargebeeCustomer ? '' : 'invisible'}`} href="javascript:void(0)" onClick={() => { ChargebeeClient.getOrCreate().then(chargebeeClient => chargebeeClient.openPortal()); }}>Billing</a>
+                    <a className={`gp-link ${isChargebeeCustomer ? '' : 'invisible'}`} href="javascript:void(0)" onClick={() => { ChargebeeClient.getOrCreate().then(chargebeeClient => chargebeeClient.openPortal()); }}>Billing</a>
                     {!!accountStatement && Plans.isFreePlan(currentPlan.chargebeeId) && <span className="pl-6">{currency === 'EUR'
                         ? <>€ / <a className="text-blue-light hover:underline" href="javascript:void(0)" onClick={() => setCurrency('USD')}>$</a></>
                         : <><a className="text-blue-light hover:underline" href="javascript:void(0)" onClick={() => setCurrency('EUR')}>€</a> / $</>}

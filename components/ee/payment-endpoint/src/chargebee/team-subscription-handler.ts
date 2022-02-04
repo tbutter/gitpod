@@ -38,13 +38,13 @@ export class TeamSubscriptionHandler implements EventHandler<chargebee.Subscript
 
     async handleSingleEvent(event: chargebee.Event<chargebee.SubscriptionEventV2>): Promise<boolean> {
         const chargebeeSubscription = event.content.subscription;
-        const userId = chargebeeSubscription.customer_id;
+        const customerId = chargebeeSubscription.customer_id;
         const eventType = event.event_type;
 
         const logContext = this.userContext(event);
         log.info(logContext, `Start TeamSubscriptionHandler.handleSingleEvent`, { eventType });
         try {
-            await this.mapToTeamSubscription(userId, eventType, chargebeeSubscription);
+            await this.mapToTeamSubscription(customerId, eventType, chargebeeSubscription);
         } catch (error) {
             log.error(logContext, "Error in TeamSubscriptionHandler.handleSingleEvent", error);
             throw error;
@@ -53,10 +53,11 @@ export class TeamSubscriptionHandler implements EventHandler<chargebee.Subscript
         return true;
     }
 
-    async mapToTeamSubscription(userId: string, eventType: chargebee.EventType, chargebeeSubscription: chargebee.Subscription) {
+    async mapToTeamSubscription(customerId: string, eventType: chargebee.EventType, chargebeeSubscription: chargebee.Subscription) {
+        // TODO(janx) Handle `customerId.startsWith('team:')`
         await this.db.transaction(async (db) => {
             const subs = await db.findTeamSubscriptions({
-                userId,
+                userId: customerId,
                 paymentReference: chargebeeSubscription.id
             });
             if (subs.length === 0) {
@@ -67,7 +68,7 @@ export class TeamSubscriptionHandler implements EventHandler<chargebee.Subscript
                 }
 
                 const ts = TeamSubscription.create({
-                    userId,
+                    userId: customerId,
                     paymentReference: chargebeeSubscription.id,
                     planId: chargebeeSubscription.plan_id,
                     startDate: getStartDate(chargebeeSubscription),

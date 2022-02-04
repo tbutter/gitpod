@@ -2457,6 +2457,9 @@ export class GitpodServerImpl implements GitpodServerWithTracing, Disposable {
     async checkout(ctx: TraceContext, planId: string, planQuantity?: number): Promise<{}> {
         throw new ResponseError(ErrorCodes.SAAS_FEATURE, `Not implemented in this version`);
     }
+    async teamCheckout(ctx: TraceContext, teamId: string, planId: string): Promise<{}> {
+        throw new ResponseError(ErrorCodes.SAAS_FEATURE, `Not implemented in this version`);
+    }
     async getAvailableCoupons(ctx: TraceContext): Promise<PlanCoupon[]> {
         throw new ResponseError(ErrorCodes.SAAS_FEATURE, `Not implemented in this version`);
     }

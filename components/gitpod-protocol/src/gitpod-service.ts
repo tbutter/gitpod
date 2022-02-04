@@ -223,6 +223,7 @@ export interface GitpodServer extends JsonRpcServer<GitpodClient>, AdminServer, 
     getChargebeeSiteId(): Promise<string>;
     createPortalSession(): Promise<{}>;
     checkout(planId: string, planQuantity?: number): Promise<{}>;
+    teamCheckout(teamId: string, planId: string): Promise<{}>;
     getAvailableCoupons(): Promise<PlanCoupon[]>;
     getAppliedCoupons(): Promise<PlanCoupon[]>;
 

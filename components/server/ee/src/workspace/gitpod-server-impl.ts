@@ -954,6 +954,44 @@ export class GitpodServerEEImpl extends GitpodServerImpl {
         }
     }
 
+    async teamCheckout(ctx: TraceContext, teamId: string, planId: string): Promise<{}> {
+        traceAPIParams(ctx, { teamId, planId });
+
+        const user = this.checkUser('teamCheckout');
+
+        const team = await this.teamDB.findTeamById(teamId);
+        if (!team) {
+            throw new ResponseError(ErrorCodes.NOT_FOUND, "Team not found");
+        }
+        const members = await this.teamDB.findMembersByTeam(team.id);
+        await this.guardAccess({ kind: "team", subject: team, members }, "update");
+
+        // TODO(janx): If student team plan, check that every member is eligible
+
+        const coupon = await this.findAvailableCouponForPlan(user, planId);
+
+        const email = User.getPrimaryEmail(user);
+        return new Promise((resolve, reject) => {
+            this.chargebeeProvider.hosted_page.checkout_new({
+                customer: {
+                    id: 'team:' + team.id,
+                    email,
+                },
+                subscription: {
+                    plan_id: planId,
+                    plan_quantity: members.length,
+                    coupon,
+                }
+            }).request((error: any, result: any) => {
+                if (error) {
+                    reject(error);
+                    return;
+                }
+                resolve(result.hosted_page);
+            });
+        });
+    }
+
     protected async findAvailableCouponForPlan(user: User, planId: string): Promise<string | undefined> {
         const couponNames = await this.couponComputer.getAvailableCouponIds(user);
         const chargbeeCoupons = await Promise.all(couponNames.map(c => new Promise<chargebee.Coupon | undefined>((resolve, reject) => this.chargebeeProvider.coupon.retrieve(c).request((err, res) => {
