@@ -235,6 +235,7 @@ func (h *InWorkspaceHandler) Mount(req *libseccomp.ScmpNotifReq) (val uint64, er
 		"source": source,
 		"dest":   dest,
 		"fstype": filesystem,
+		"id":     req.ID,
 	}).Error("handling mount syscall")
 
 	if filesystem == "proc" || filesystem == "sysfs" {
@@ -287,8 +288,11 @@ func (h *InWorkspaceHandler) Mount(req *libseccomp.ScmpNotifReq) (val uint64, er
 			Pid:    int64(req.Pid),
 		})
 		if err != nil {
-			log.WithField("target", dest).WithError(err).Errorf("cannot mount %s", filesystem)
-			return Errno(unix.EFAULT)
+			log.WithFields(map[string]interface{}{
+				"dest":   dest,
+				"target": target,
+				"id":     req.ID,
+			}).WithError(err).Errorf("cannot mount %s", filesystem)
 		}
 
 		return 0, 0, 0
