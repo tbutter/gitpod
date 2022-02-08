@@ -231,6 +231,15 @@ func (h *InWorkspaceHandler) Mount(req *libseccomp.ScmpNotifReq) (val uint64, er
 		return Errno(unix.EFAULT)
 	}
 
+	if filesystem == "overlay" {
+		log.WithFields(map[string]interface{}{
+			"source": source,
+			"dest":   dest,
+			"fstype": filesystem,
+			"id":     req.ID,
+		}).Warn("handling overlay mount syscall")
+	}
+
 	if filesystem == "proc" || filesystem == "sysfs" {
 		log.WithFields(map[string]interface{}{
 			"source": source,
