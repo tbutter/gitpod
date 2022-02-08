@@ -390,7 +390,7 @@ var ring1Cmd = &cobra.Command{
 		procLoc := filepath.Join(ring2Root, "proc")
 		err = os.MkdirAll(procLoc, 0755)
 		if err != nil {
-			log.WithError(err).Error("cannot mount proc")
+			log.WithError(err).Error("cannot create %w", filepath.Join(ring2Root))
 			return
 		}
 
@@ -406,7 +406,7 @@ var ring1Cmd = &cobra.Command{
 		client.Close()
 
 		if err != nil {
-			log.WithError(err).Error("cannot mount proc")
+			log.WithField("target", procLoc).WithField("pid", int64(cmd.Process.Pid)).WithError(err).Error("cannot mount proc")
 			return
 		}
 

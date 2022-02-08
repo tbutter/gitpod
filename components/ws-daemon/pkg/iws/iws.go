@@ -304,9 +304,9 @@ func (wbs *InWorkspaceServiceServer) MountProc(ctx context.Context, req *api.Mou
 			return
 		}
 
-		log.WithError(err).WithField("procPID", procPID).WithField("reqPID", reqPID).WithFields(wbs.Session.OWI()).Error("cannot mount proc")
+		log.WithError(err).WithField("procPID", procPID).WithField("reqPID", reqPID).WithFields(wbs.Session.OWI()).Error("cannot mount proc in IWS")
 		if _, ok := status.FromError(err); !ok {
-			err = status.Error(codes.Internal, "cannot mount proc")
+			err = status.Error(codes.Internal, "cannot mount proc in IWS")
 		}
 	}()
 
