@@ -231,14 +231,13 @@ func (h *InWorkspaceHandler) Mount(req *libseccomp.ScmpNotifReq) (val uint64, er
 		return Errno(unix.EFAULT)
 	}
 
-	log.WithFields(map[string]interface{}{
-		"source": source,
-		"dest":   dest,
-		"fstype": filesystem,
-		"id":     req.ID,
-	}).Error("handling mount syscall")
-
 	if filesystem == "proc" || filesystem == "sysfs" {
+		log.WithFields(map[string]interface{}{
+			"source": source,
+			"dest":   dest,
+			"fstype": filesystem,
+			"id":     req.ID,
+		}).Warn("handling mount syscall")
 		// When a process wants to mount proc relative to `/proc/self` that path has no meaning outside of the processes' context.
 		// runc started doing this in https://github.com/opencontainers/runc/commit/0ca91f44f1664da834bc61115a849b56d22f595f
 		// TODO(cw): there must be a better way to handle this. Find one.
@@ -283,6 +282,17 @@ func (h *InWorkspaceHandler) Mount(req *libseccomp.ScmpNotifReq) (val uint64, er
 		if filesystem == "sysfs" {
 			call = iws.MountSysfs
 		}
+		// if strings.HasPrefix(dest, "/proc/self/fd") {
+		// 	_, err = call(ctx, &daemonapi.MountProcRequest{
+		// 		Target: target,
+		// 		Pid:    int64(req.Pid),
+		// 	})
+		// } else {
+		// 	_, err = call(ctx, &daemonapi.MountProcRequest{
+		// 		Target: dest,
+		// 		Pid:    int64(req.Pid),
+		// 	})
+		// }
 		_, err = call(ctx, &daemonapi.MountProcRequest{
 			Target: dest,
 			Pid:    int64(req.Pid),
@@ -293,6 +303,7 @@ func (h *InWorkspaceHandler) Mount(req *libseccomp.ScmpNotifReq) (val uint64, er
 				"target": target,
 				"id":     req.ID,
 			}).WithError(err).Errorf("cannot mount %s", filesystem)
+			return Errno(unix.EFAULT)
 		}
 
 		return 0, 0, 0
