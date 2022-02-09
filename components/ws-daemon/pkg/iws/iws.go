@@ -354,7 +354,7 @@ func (wbs *InWorkspaceServiceServer) MountProc(ctx context.Context, req *api.Mou
 		}
 	}
 
-	err = moveMountWithEnterMount(wbs.Session.InstanceID, int(procPID), nodeStaging, req.Target)
+	err = moveMount(wbs.Session.InstanceID, int(procPID), nodeStaging, req.Target)
 	if err != nil {
 		return nil, err
 	}
@@ -582,26 +582,6 @@ func (wbs *InWorkspaceServiceServer) MountSysfs(ctx context.Context, req *api.Mo
 	cleanupMaskedMount(wbs.Session.OWI(), nodeStaging, sysfsDefaultMaskedPaths)
 
 	return &api.MountProcResponse{}, nil
-}
-
-func moveMountWithEnterMount(instanceID string, targetPid int, source, target string) error {
-	mntfd, err := syscallOpenTree(unix.AT_FDCWD, source, flagOpenTreeClone|flagAtRecursive)
-	if err != nil {
-		return xerrors.Errorf("cannot open tree: %w", err)
-	}
-	mntf := os.NewFile(mntfd, "")
-	defer mntf.Close()
-
-	// Note(cw): we also need to enter the target PID namespace because the mount target
-	// 			 might refer to proc.
-	err = nsinsider(instanceID, targetPid, func(c *exec.Cmd) {
-		c.Args = append(c.Args, "move-mount", "--target", target, "--pipe-fd", "3")
-		c.ExtraFiles = append(c.ExtraFiles, mntf)
-	}, enterPidNS(true), enterMountNS(true))
-	if err != nil {
-		return xerrors.Errorf("cannot move mount: %w", err)
-	}
-	return nil
 }
 
 func moveMount(instanceID string, targetPid int, source, target string) error {

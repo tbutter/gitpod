@@ -269,6 +269,7 @@ func main() {
 	}
 }
 
+//   syscallMoveMount(c.Int("pipe-fd"), "", unix.AT_FDCWD, c.String("target"), flagMoveMountFEmptyPath)
 func syscallMoveMount(fromDirFD int, fromPath string, toDirFD int, toPath string, flags uintptr) error {
 	fromPathP, err := unix.BytePtrFromString(fromPath)
 	if err != nil {
