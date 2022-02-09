@@ -39,7 +39,7 @@ func main() {
 				Action: func(c *cli.Context) error {
 					target := c.String("target")
 					if _, err := os.Stat(target); os.IsNotExist(err) {
-						log.Warnf("%s doesn't exist in nsinsider", target)
+						return fmt.Errorf("%s doesn't exist in nsinsider", target)
 					}
 					return syscallMoveMount(c.Int("pipe-fd"), "", unix.AT_FDCWD, target, flagMoveMountFEmptyPath)
 				},

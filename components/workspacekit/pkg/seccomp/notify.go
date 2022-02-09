@@ -296,16 +296,17 @@ func (h *InWorkspaceHandler) Mount(req *libseccomp.ScmpNotifReq) (val uint64, er
 		if filesystem == "sysfs" {
 			call = iws.MountSysfs
 		}
-		// if strings.HasPrefix(dest, "/proc/self/fd") {
-		// 	_, err = call(ctx, &daemonapi.MountProcRequest{
-		// 		Target: target,
-		// 		Pid:    int64(req.Pid),
-		// 	})
-		// } else {
-		// 	_, err = call(ctx, &daemonapi.MountProcRequest{
-		// 		Target: dest,
-		// 		Pid:    int64(req.Pid),
-		// 	})
+
+		if filesystem == "proc" {
+			err = os.MkdirAll(dest, 0755)
+			if err != nil {
+				log.WithError(err).Error("cannot create %w", dest)
+				return Errno(unix.EFAULT)
+			}
+		}
+		// if _, err := os.Stat(target); os.IsNotExist(err) {
+		// 	log.Warnf("%s doesn't exist in nsinsider", target)
+		// 	return err
 		// }
 		log.WithFields(map[string]interface{}{
 			"dest":   dest,
