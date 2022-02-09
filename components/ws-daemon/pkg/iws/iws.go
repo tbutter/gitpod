@@ -53,24 +53,24 @@ var (
 	// Compared to the origin of this list, we imply the /proc prefix.
 	// That means we don't list the prefix, but also we only list files/dirs here which
 	// reside in /proc (e.g. not /sys/firmware).
-	// procDefaultMaskedPaths = []string{
-	// 	"acpi",
-	// 	"kcore",
-	// 	"keys",
-	// 	"latency_stats",
-	// 	"timer_list",
-	// 	"timer_stats",
-	// 	"sched_debug",
-	// 	"scsi",
-	// }
-	// procDefaultReadonlyPaths = []string{
-	// 	"asound",
-	// 	"bus",
-	// 	"fs",
-	// 	"irq",
-	// 	"sys",
-	// 	"sysrq-trigger",
-	// }
+	procDefaultMaskedPaths = []string{
+		"acpi",
+		"kcore",
+		"keys",
+		"latency_stats",
+		"timer_list",
+		"timer_stats",
+		"sched_debug",
+		"scsi",
+	}
+	procDefaultReadonlyPaths = []string{
+		"asound",
+		"bus",
+		"fs",
+		"irq",
+		"sys",
+		"sysrq-trigger",
+	}
 	sysfsDefaultMaskedPaths = []string{
 		"firmware",
 	}
@@ -329,49 +329,42 @@ func (wbs *InWorkspaceServiceServer) MountProc(ctx context.Context, req *api.Mou
 		return nil, xerrors.Errorf("cannot map in-container PID %d (container PID: %d): %w", req.Pid, containerPID, err)
 	}
 
-	err = nsinsider(wbs.Session.InstanceID, int(procPID), func(c *exec.Cmd) {
-		c.Args = append(c.Args, "mount-proc", "--target", req.Target)
-	}, enterMountNS(false), enterPidNS(true), enterNetNS(true))
+	nodeStaging, err := os.MkdirTemp("", "proc-staging")
 	if err != nil {
-		return nil, xerrors.Errorf("mount new proc at %s: %w", req.Target, err)
+		return nil, xerrors.Errorf("cannot prepare proc staging: %w", err)
+	}
+	err = nsinsider(wbs.Session.InstanceID, int(procPID), func(c *exec.Cmd) {
+		c.Args = append(c.Args, "mount-proc", "--target", nodeStaging)
+		// }, enterMountNS(false), enterPidNS(true), enterNetNS(true))
+	}, enterMountNS(true), enterPidNS(true), enterNetNS(true))
+	if err != nil {
+		return nil, xerrors.Errorf("mount new proc at %s: %w", nodeStaging, err)
 	}
 
-	// nodeStaging, err := os.MkdirTemp("", "proc-staging")
-	// if err != nil {
-	// 	return nil, xerrors.Errorf("cannot prepare proc staging: %w", err)
-	// }
-	// err = nsinsider(wbs.Session.InstanceID, int(procPID), func(c *exec.Cmd) {
-	// 	c.Args = append(c.Args, "mount-proc", "--target", nodeStaging)
-	// }, enterMountNS(false), enterPidNS(true), enterNetNS(true))
-	// // }, enterMountNS(true), enterPidNS(true), enterNetNS(true))
-	// if err != nil {
-	// 	return nil, xerrors.Errorf("mount new proc at %s: %w", nodeStaging, err)
-	// }
+	for _, mask := range procDefaultMaskedPaths {
+		err = maskPath(filepath.Join(nodeStaging, mask))
+		if err != nil {
+			return nil, xerrors.Errorf("cannot mask %s: %w", mask, err)
+		}
+	}
+	for _, rdonly := range procDefaultReadonlyPaths {
+		err = readonlyPath(filepath.Join(nodeStaging, rdonly))
+		if err != nil {
+			return nil, xerrors.Errorf("cannot mount readonly %s: %w", rdonly, err)
+		}
+	}
 
-	// for _, mask := range procDefaultMaskedPaths {
-	// 	err = maskPath(filepath.Join(nodeStaging, mask))
-	// 	if err != nil {
-	// 		return nil, xerrors.Errorf("cannot mask %s: %w", mask, err)
-	// 	}
-	// }
-	// for _, rdonly := range procDefaultReadonlyPaths {
-	// 	err = readonlyPath(filepath.Join(nodeStaging, rdonly))
-	// 	if err != nil {
-	// 		return nil, xerrors.Errorf("cannot mount readonly %s: %w", rdonly, err)
-	// 	}
-	// }
+	err = moveMount(wbs.Session.InstanceID, int(procPID), nodeStaging, req.Target)
+	if err != nil {
+		return nil, err
+	}
 
-	// err = moveMount(wbs.Session.InstanceID, int(procPID), nodeStaging, req.Target)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	// // now that we've moved the mount (which we've done with OPEN_TREE_CLONE), we'll
-	// // need to unmount the mask mounts again to not leave them dangling.
-	// var masks []string
-	// masks = append(masks, procDefaultMaskedPaths...)
-	// masks = append(masks, procDefaultReadonlyPaths...)
-	// cleanupMaskedMount(wbs.Session.OWI(), nodeStaging, masks)
+	// now that we've moved the mount (which we've done with OPEN_TREE_CLONE), we'll
+	// need to unmount the mask mounts again to not leave them dangling.
+	var masks []string
+	masks = append(masks, procDefaultMaskedPaths...)
+	masks = append(masks, procDefaultReadonlyPaths...)
+	cleanupMaskedMount(wbs.Session.OWI(), nodeStaging, masks)
 
 	return &api.MountProcResponse{}, nil
 }
@@ -591,7 +584,7 @@ func (wbs *InWorkspaceServiceServer) MountSysfs(ctx context.Context, req *api.Mo
 	return &api.MountProcResponse{}, nil
 }
 
-//   moveMount(wbs.Session.InstanceID, int(procPID), nodeStaging, req.Target)
+//  moveMount(wbs.Session.InstanceID, int(procPID), nodeStaging, req.Target)
 func moveMount(instanceID string, targetPid int, source, target string) error {
 	mntfd, err := syscallOpenTree(unix.AT_FDCWD, source, flagOpenTreeClone|flagAtRecursive)
 	if err != nil {
@@ -749,15 +742,15 @@ func maskPath(path string) error {
 // readonlyPath will make a path read only.
 //
 // Blatant copy from runc: https://github.com/opencontainers/runc/blob/master/libcontainer/rootfs_linux.go#L907-L916
-// func readonlyPath(path string) error {
-// 	if err := unix.Mount(path, path, "", unix.MS_BIND|unix.MS_REC, ""); err != nil {
-// 		if os.IsNotExist(err) {
-// 			return nil
-// 		}
-// 		return err
-// 	}
-// 	return unix.Mount(path, path, "", unix.MS_BIND|unix.MS_REMOUNT|unix.MS_RDONLY|unix.MS_REC, "")
-// }
+func readonlyPath(path string) error {
+	if err := unix.Mount(path, path, "", unix.MS_BIND|unix.MS_REC, ""); err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
+		return err
+	}
+	return unix.Mount(path, path, "", unix.MS_BIND|unix.MS_REMOUNT|unix.MS_RDONLY|unix.MS_REC, "")
+}
 
 // WriteIDMapping writes /proc/.../uid_map and /proc/.../gid_map for a workapce container
 func (wbs *InWorkspaceServiceServer) WriteIDMapping(ctx context.Context, req *api.WriteIDMappingRequest) (*api.WriteIDMappingResponse, error) {
