@@ -310,6 +310,10 @@ func (wbs *InWorkspaceServiceServer) MountProc(ctx context.Context, req *api.Mou
 		}
 	}()
 
+	if _, err := os.Stat(req.Target); os.IsNotExist(err) {
+		log.Warnf("%s doesn't exist", req.Target)
+	}
+
 	rt := wbs.Uidmapper.Runtime
 	if rt == nil {
 		return nil, status.Errorf(codes.FailedPrecondition, "not connected to container runtime")
@@ -335,8 +339,8 @@ func (wbs *InWorkspaceServiceServer) MountProc(ctx context.Context, req *api.Mou
 	}
 	err = nsinsider(wbs.Session.InstanceID, int(procPID), func(c *exec.Cmd) {
 		c.Args = append(c.Args, "mount-proc", "--target", nodeStaging)
-		// }, enterMountNS(false), enterPidNS(true), enterNetNS(true))
-	}, enterMountNS(true), enterPidNS(true), enterNetNS(true))
+	}, enterMountNS(false), enterPidNS(true), enterNetNS(true))
+	// }, enterMountNS(true), enterPidNS(true), enterNetNS(true))
 	if err != nil {
 		return nil, xerrors.Errorf("mount new proc at %s: %w", nodeStaging, err)
 	}
@@ -599,6 +603,7 @@ func moveMount(instanceID string, targetPid int, source, target string) error {
 		c.Args = append(c.Args, "move-mount", "--target", target, "--pipe-fd", "3")
 		c.ExtraFiles = append(c.ExtraFiles, mntf)
 	}, enterPidNS(true))
+	// }, enterPidNS(true), enterMountNS(true))
 	if err != nil {
 		return xerrors.Errorf("cannot move mount: %w", err)
 	}
