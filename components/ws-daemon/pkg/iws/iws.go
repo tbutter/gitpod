@@ -311,7 +311,7 @@ func (wbs *InWorkspaceServiceServer) MountProc(ctx context.Context, req *api.Mou
 	}()
 
 	if _, err := os.Stat(req.Target); os.IsNotExist(err) {
-		log.Warnf("%s doesn't exist", req.Target)
+		log.Warnf("%s doesn't exist in iws", req.Target)
 	}
 
 	rt := wbs.Uidmapper.Runtime
