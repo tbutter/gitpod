@@ -272,6 +272,11 @@ func (h *InWorkspaceHandler) Mount(req *libseccomp.ScmpNotifReq) (val uint64, er
 					log.WithField("target", target).WithField("dest", dest).WithError(err).Errorf("cannot resolve %s mount target symlink", filesystem)
 					return Errno(unix.EFAULT)
 				}
+				log.WithFields(map[string]interface{}{
+					"dest":   dest,
+					"target": target,
+					"id":     req.ID,
+				}).WithError(err).Warn("read symlink")
 			} else if stat.Mode()&os.ModeDir == 0 {
 				log.WithField("target", target).WithField("dest", dest).WithField("mode", stat.Mode()).WithError(err).Errorf("%s must be mounted on an ordinary directory", filesystem)
 				return Errno(unix.EPERM)
@@ -302,6 +307,11 @@ func (h *InWorkspaceHandler) Mount(req *libseccomp.ScmpNotifReq) (val uint64, er
 		// 		Pid:    int64(req.Pid),
 		// 	})
 		// }
+		log.WithFields(map[string]interface{}{
+			"dest":   dest,
+			"target": target,
+			"id":     req.ID,
+		}).WithError(err).Warn("call Mount Request from seccomp notify")
 		_, err = call(ctx, &daemonapi.MountProcRequest{
 			Target: dest,
 			Pid:    int64(req.Pid),
