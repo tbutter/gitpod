@@ -13,10 +13,15 @@
     - gcp-login
 
 - name: Backup to GCP bucket
-  hosts: gitpod_node_main
+  hosts:
+    - gitpod_node_main
+    - instance_gitlab
+    - instance_registry
   vars_files:
     - vars/common.yaml
     - vars/gcp.yaml
+    - vars/gitlab.yaml
+    - vars/registry.yaml
   roles:
     - gcp-bucket-backup
 
@@ -25,6 +30,7 @@
   gather_facts: no
   vars_files:
     - vars/gcp.yaml
+    - vars/gcp-dns.yaml
   vars:
     gcp_instance_names:
       - gitlab

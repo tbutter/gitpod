@@ -3,5 +3,4 @@
 # See License-AGPL.txt in the project root for license information.
 
 ---
-registry_instance_name: registry
-registry_domain: registry-1.testing.gitpod-self-hosted.com
+registry_domain: "{{ undef(hint='You must specify a domain.') }}"

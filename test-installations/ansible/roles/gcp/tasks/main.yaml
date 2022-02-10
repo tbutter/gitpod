@@ -38,6 +38,9 @@
 - set_fact:
     cluster_ip: "{{ gcpvm.results[0].networkInterfaces[0].accessConfigs[0].natIP }}"
 
+- set_fact:
+    cluster_internal_ip: "{{ gcpvm.results[0].networkInterfaces[0].networkIP }}"
+
 - name: Create http/https firewall rule
   google.cloud.gcp_compute_firewall:
     name: "allow-http-https"
@@ -57,6 +60,19 @@
     allowed:
     - ip_protocol: tcp
       ports: ["6443"]
+    direction: INGRESS
+    source_ranges: "0.0.0.0/0"
+    project: "{{ gcp_project }}"
+    auth_kind: serviceaccount
+    service_account_contents: "{{ gcp_cred_content }}"
+    state: present
+
+- name: Create WireGuard rule
+  google.cloud.gcp_compute_firewall:
+    name: "allow-wireguard"
+    allowed:
+    - ip_protocol: udp
+      ports: ["41194"]
     direction: INGRESS
     source_ranges: "0.0.0.0/0"
     project: "{{ gcp_project }}"
