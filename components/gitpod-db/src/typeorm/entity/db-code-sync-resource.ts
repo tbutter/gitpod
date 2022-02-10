@@ -26,7 +26,7 @@ export const ALL_SYNC_RESOURCES: SyncResource[] = [SyncResource.Settings, SyncRe
 export interface IUserDataManifest {
 	readonly latest?: Record<ServerResource, string>;
 	readonly session: string;
-	readonly ref: string;
+	readonly ref?: string;
 }
 
 export type ServerResource = SyncResource | 'machines';

@@ -13,13 +13,12 @@ import * as express from 'express';
 import { inject, injectable } from 'inversify';
 import { BearerAuth } from '../auth/bearer-authenticator';
 import { isWithFunctionAccessGuard } from '../auth/function-access';
-import { CodeSyncResourceDB, UserStorageResourcesDB, ALL_SERVER_RESOURCES, ServerResource, SyncResource } from '@gitpod/gitpod-db/lib';
+import { CodeSyncResourceDB, UserStorageResourcesDB, ALL_SERVER_RESOURCES, ServerResource } from '@gitpod/gitpod-db/lib';
 import { DeleteRequest, DownloadUrlRequest, DownloadUrlResponse, UploadUrlRequest, UploadUrlResponse } from '@gitpod/content-service/lib/blobs_pb';
 import { log } from '@gitpod/gitpod-protocol/lib/util/logging';
 import { v4 as uuidv4 } from 'uuid';
 import { accessCodeSyncStorage, UserRateLimiter } from '../auth/rate-limiter';
 import { increaseApiCallUserCounter } from '../prometheus-metrics';
-import { TheiaPluginService } from '../theia-plugin/theia-plugin-service';
 import { Config } from '../config';
 import { CachingBlobServiceClientProvider } from '@gitpod/content-service/lib/sugar';
 
@@ -41,18 +40,6 @@ const objectPrefix = 'code-sync/';
 function toObjectName(resource: ServerResource, rev: string): string {
     return objectPrefix + resource + '/' + rev;
 }
-
-const fromTheiaRev = 'from-theia';
-interface ISyncData {
-    version: number;
-    machineId?: string;
-    content: string;
-}
-interface ISettingsSyncContent {
-    settings: string;
-}
-const userSettingsUri = 'user_storage:settings.json';
-
 @injectable()
 export class CodeSyncService {
 
@@ -68,11 +55,7 @@ export class CodeSyncService {
     @inject(CodeSyncResourceDB)
     private readonly db: CodeSyncResourceDB;
 
-    @inject(TheiaPluginService)
-    private readonly theiaPluginService: TheiaPluginService;
-
     @inject(UserStorageResourcesDB)
-    private readonly userStorageResourcesDB: UserStorageResourcesDB;
 
     get apiRouter(): express.Router {
         const config = this.config.codeSync;
@@ -114,12 +97,6 @@ export class CodeSyncService {
                 return;
             }
             const manifest = await this.db.getManifest(req.user.id);
-            if (!manifest.latest.extensions) {
-                manifest.latest.extensions = fromTheiaRev;
-            }
-            if (!manifest.latest.settings) {
-                manifest.latest.settings = fromTheiaRev;
-            }
             res.json(manifest);
             return;
         });
@@ -152,12 +129,8 @@ export class CodeSyncService {
                 return;
             }
             let resourceRev: string | undefined = req.params.ref;
-            if (resourceRev !== fromTheiaRev) {
-                resourceRev = (await this.db.getResource(req.user.id, resourceKey, resourceRev))?.rev;
-            }
-            if (!resourceRev && (resourceKey === SyncResource.Extensions || resourceKey === SyncResource.Settings)) {
-                resourceRev = fromTheiaRev;
-            }
+            resourceRev = (await this.db.getResource(req.user.id, resourceKey, resourceRev))?.rev;
+
             if (!resourceRev) {
                 res.setHeader('etag', '0');
                 res.sendStatus(204);
@@ -169,43 +142,30 @@ export class CodeSyncService {
             }
 
             let content: string;
-            if (resourceRev === fromTheiaRev) {
-                let version = 1;
-                let value = '';
-                if (resourceKey === SyncResource.Extensions) {
-                    value = await this.theiaPluginService.getCodeSyncResource(req.user.id);
-                    version = 5;
-                } else if (resourceKey === SyncResource.Settings) {
-                    const settings = await this.userStorageResourcesDB.get(req.user.id, userSettingsUri);
-                    value = JSON.stringify(<ISettingsSyncContent>{ settings });
-                    version = 2;
-                }
-                content = JSON.stringify(<ISyncData>{ version, content: value });
-            } else {
-                const contentType = req.headers['content-type'] || '*/*';
-                const request = new DownloadUrlRequest();
-                request.setOwnerId(req.user.id);
-                request.setName(toObjectName(resourceKey, resourceRev));
-                request.setContentType(contentType);
-                try {
-                    const blobsClient = this.blobsProvider.getDefault();
-                    const urlResponse = await util.promisify<DownloadUrlRequest, DownloadUrlResponse>(blobsClient.downloadUrl.bind(blobsClient))(request);
-                    const response = await fetch(urlResponse.getUrl(), {
-                        headers: {
-                            'content-type': contentType
-                        }
-                    });
-                    if (response.status !== 200) {
-                        throw new Error(`code sync: blob service: download failed with ${response.status} ${response.statusText}`);
+
+            const contentType = req.headers['content-type'] || '*/*';
+            const request = new DownloadUrlRequest();
+            request.setOwnerId(req.user.id);
+            request.setName(toObjectName(resourceKey, resourceRev));
+            request.setContentType(contentType);
+            try {
+                const blobsClient = this.blobsProvider.getDefault();
+                const urlResponse = await util.promisify<DownloadUrlRequest, DownloadUrlResponse>(blobsClient.downloadUrl.bind(blobsClient))(request);
+                const response = await fetch(urlResponse.getUrl(), {
+                    headers: {
+                        'content-type': contentType
                     }
-                    content = await response.text();
-                } catch (e) {
-                    if (e.code === status.NOT_FOUND) {
-                        res.sendStatus(204);
-                        return;
-                    }
-                    throw e;
+                });
+                if (response.status !== 200) {
+                    throw new Error(`code sync: blob service: download failed with ${response.status} ${response.statusText}`);
                 }
+                content = await response.text();
+            } catch (e) {
+                if (e.code === status.NOT_FOUND) {
+                    res.sendStatus(204);
+                    return;
+                }
+                throw e;
             }
             res.setHeader('etag', resourceRev);
             res.type('text/plain');
@@ -224,9 +184,6 @@ export class CodeSyncService {
                 return;
             }
             let latestRev = typeof req.headers['If-Match'] === 'string' ? req.headers['If-Match'] : undefined;
-            if (latestRev === fromTheiaRev) {
-                latestRev = undefined;
-            }
             const revLimit = resourceKey === 'machines' ? 1 : config.resources?.[resourceKey]?.revLimit || config?.revLimit || defautltRevLimit;
             const userId = req.user.id;
             let oldObject: string | undefined;
