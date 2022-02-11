@@ -15,6 +15,7 @@ import (
 	"database/sql"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -367,7 +368,7 @@ func (c *ComponentAPI) CreateUser(username string, token string) (string, error)
 
 	var userId string
 	err = db.QueryRow(`SELECT id FROM d_b_user WHERE name = ?`, username).Scan(&userId)
-	if err != nil {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return "", err
 	}
 
@@ -392,7 +393,7 @@ func (c *ComponentAPI) CreateUser(username string, token string) (string, error)
 
 	var authId string
 	err = db.QueryRow(`SELECT authId FROM d_b_identity WHERE userId = ?`, userId).Scan(&authId)
-	if err != nil {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return "", err
 	}
 	if authId == "" {
@@ -411,7 +412,7 @@ func (c *ComponentAPI) CreateUser(username string, token string) (string, error)
 
 	var cnt int
 	err = db.QueryRow(`SELECT COUNT(1) AS cnt FROM d_b_token_entry WHERE authId = ?`, authId).Scan(&cnt)
-	if err != nil {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return "", err
 	}
 	if cnt == 0 {
@@ -450,7 +451,7 @@ func (c *ComponentAPI) CreateUser(username string, token string) (string, error)
 
 		_, err = db.Exec(`INSERT IGNORE INTO d_b_token_entry (authProviderId, authId, token, uid) VALUES (?, ?, ?, ?)`,
 			"Public-GitHub",
-			userId,
+			authId,
 			encryptedJson,
 			uid.String(),
 		)
