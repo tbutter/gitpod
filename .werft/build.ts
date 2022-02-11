@@ -39,6 +39,12 @@ Tracing.initialize()
     .then(() => {
         werft = new Werft("build")
     })
+    .then(() => {
+        process.on('SIGTERM', () => {
+            console.log('SIGTERM signal received.');
+            werft.endAllSpans()
+        });
+    })
     .then(() => build(context, version))
     .then(() => VM.stopKubectlPortForwards())
     .then(() => werft.endAllSpans())
