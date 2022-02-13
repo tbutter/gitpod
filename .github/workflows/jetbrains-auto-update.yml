@@ -2,11 +2,11 @@ name: JetBrains Test
 on:
   workflow_dispatch:
     inputs:
-      gateway-link:
+      secret_gateway_link:
         type: string
         description: GatewayLink
         required: true
-      owner-token:
+      secret_owner_token:
         type: string
         description: OwnerToken
         required: true
@@ -33,9 +33,9 @@ jobs:
       - name: Smoke Test
         working-directory: ./dev/jetbrains-test
         env:
-          GATEWAY_LINK: ${{ github.event.inputs.gateway-link }}
           GATEWAY_PLUGIN_PATH: ../../components/ide/jetbrains/gateway-plugin/build/distributions/gitpod-gateway-test.zip
         run: |
+          export GATEWAY_LINK=$(jq -r '.inputs.secret_gateway_link' $GITHUB_EVENT_PATH)
           gradle :test
           cp -r ./video/ ./build/reports
       - name: Move video
