@@ -17,7 +17,9 @@ type ConfigSerialized struct {
 	DevBranch                         string   `json:"devBranch"`
 	InsecureNoDomain                  bool     `json:"insecureNoDomain"`
 	License                           string   `json:"license"`
+	LicenseType                       string   `json:"licenseType"`
 	LicenseFile                       string   `json:"licenseFile"`
+	LicenseTypeFile                   string   `json:"licenseTypeFile"`
 	DefinitelyGpDisabled              bool     `json:"definitelyGpDisabled"`
 	EnableLocalApp                    bool     `json:"enableLocalApp"`
 	BuiltinAuthProvidersConfigured    bool     `json:"builtinAuthProvidersConfigured"`

@@ -13,7 +13,7 @@ const (
 	ContainerPort         = 3000
 	ContainerPortName     = "http"
 	authProviderFilePath  = "/gitpod/auth-providers"
-	licenseFilePath       = "/gitpod/license"
+	licensePath           = "/gitpod/license"
 	PrometheusPort        = 9500
 	PrometheusPortName    = "metrics"
 	InstallationAdminPort = common.ServerInstallationAdminPort

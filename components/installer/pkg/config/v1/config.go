@@ -227,6 +227,13 @@ type Workspace struct {
 	Templates *WorkspaceTemplates `json:"templates,omitempty"`
 }
 
+type LicensorType string
+
+const (
+	LicensorTypeLegacy     LicensorType = "legacy"
+	LicensorTypeReplicated LicensorType = "replicated"
+)
+
 type FSShiftMethod string
 
 const (

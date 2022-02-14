@@ -21,8 +21,10 @@ func configmap(ctx *common.RenderContext) ([]runtime.Object, error) {
 	}
 
 	license := ""
+	licenseTypeFile := ""
 	if ctx.Config.License != nil {
-		license = licenseFilePath
+		license = fmt.Sprintf("%s/license", licensePath)
+		licenseTypeFile = fmt.Sprintf("%s/licensor", licensePath) // If not set, will use "legacy"
 	}
 
 	// todo(sje): all these values are configurable
@@ -32,6 +34,7 @@ func configmap(ctx *common.RenderContext) ([]runtime.Object, error) {
 		InstallationShortname: ctx.Namespace, // todo(sje): is this needed?
 		Stage:                 "production",  // todo(sje): is this needed?
 		LicenseFile:           license,
+		LicenseTypeFile:       licenseTypeFile,
 		WorkspaceHeartbeat: WorkspaceHeartbeat{
 			IntervalSeconds: 60,
 			TimeoutSeconds:  300,

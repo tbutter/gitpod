@@ -51,8 +51,7 @@ func deployment(ctx *common.RenderContext) ([]runtime.Object, error) {
 
 		volumeMounts = append(volumeMounts, corev1.VolumeMount{
 			Name:      "gitpod-license-key",
-			MountPath: licenseFilePath,
-			SubPath:   "license",
+			MountPath: licensePath,
 			ReadOnly:  true,
 		})
 	}
