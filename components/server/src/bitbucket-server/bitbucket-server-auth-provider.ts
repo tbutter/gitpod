@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2021 Gitpod GmbH. All rights reserved.
+ * Copyright (c) 2022 Gitpod GmbH. All rights reserved.
  * Licensed under the GNU Affero General Public License (AGPL).
  * See License-AGPL.txt in the project root for license information.
  */
@@ -12,7 +12,7 @@ import fetch from "node-fetch";
 import { AuthUserSetup } from "../auth/auth-provider";
 import { GenericAuthProvider } from "../auth/generic-auth-provider";
 import { BitbucketServerOAuthScopes } from "./bitbucket-server-oauth-scopes";
-import BitbucketServer = require("@atlassian/bitbucket-server")
+import * as BitbucketServer from "@atlassian/bitbucket-server";
 
 @injectable()
 export class BitbucketServerAuthProvider extends GenericAuthProvider {
@@ -94,7 +94,7 @@ export class BitbucketServerAuthProvider extends GenericAuthProvider {
             return <AuthUserSetup>{
                 authUser: {
                     authId: `${user.id!}`,
-                    authName: user.name!,
+                    authName: user.slug!,
                     primaryEmail: user.emailAddress!,
                     name: user.displayName!,
                     // avatarUrl: user.links!.avatar!.href // TODO

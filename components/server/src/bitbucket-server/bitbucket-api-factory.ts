@@ -5,10 +5,10 @@
  */
 
 import { User, Token } from "@gitpod/gitpod-protocol";
-import { APIClient, Bitbucket } from "bitbucket";
 import { inject, injectable } from "inversify";
 import { AuthProviderParams } from "../auth/auth-provider";
 import { BitbucketTokenHelper } from "../bitbucket/bitbucket-token-handler";
+import * as BitbucketServer from "@atlassian/bitbucket-server";
 
 @injectable()
 export class BitbucketServerApiFactory {
@@ -20,35 +20,40 @@ export class BitbucketServerApiFactory {
      * Returns a Bitbucket API client for the given user.
      * @param user The user the API client should be created for.
      */
-    public async create(user: User): Promise<APIClient> {
+    public async create(user: User): Promise<BitbucketServer> {
         const token = await this.tokenHelper.getTokenWithScopes(user, []);
         return this.createBitbucket(this.baseUrl, token);
     }
 
-    protected createBitbucket(baseUrl: string, token: Token): APIClient {
-        return new Bitbucket({
+    protected createBitbucket(baseUrl: string, token: Token): BitbucketServer {
+        const options = {
             baseUrl,
-            auth: {
-                token: token.value
-            }
-        });
+        };
+        const client = new BitbucketServer(options);
+        client.authenticate({
+            type: "token",
+            token: token.value
+        })
+        return client;
     }
 
     protected get baseUrl(): string {
-        return `https://api.${this.config.host}/2.0`;
+        return `https://${this.config.host}`;
     }
 }
 
 @injectable()
 export class BasicAuthBitbucketServerApiFactory extends BitbucketServerApiFactory {
-    protected createBitbucket(baseUrl: string, token: Token): APIClient {
-
-        return new Bitbucket({
+    protected createBitbucket(baseUrl: string, token: Token): BitbucketServer {
+        const options = {
             baseUrl,
-            auth: {
-                username: token.username!,
-                password: token.value
-            }
-        });
+        };
+        const client = new BitbucketServer(options);
+        client.authenticate({
+            type: "basic",
+            username: token.username || "nobody",
+            password: token.value
+        })
+        return client;
     }
 }

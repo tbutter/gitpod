@@ -6,6 +6,7 @@
 
 import { ContainerModule } from "inversify";
 import { AuthProvider } from "../auth/auth-provider";
+import { BitbucketApiFactory } from "../bitbucket/bitbucket-api-factory";
 import { BitbucketFileProvider } from "../bitbucket/bitbucket-file-provider";
 import { BitbucketLanguagesProvider } from "../bitbucket/bitbucket-language-provider";
 import { BitbucketRepositoryProvider } from "../bitbucket/bitbucket-repository-provider";
@@ -30,6 +31,7 @@ export const bitbucketServerContainerModule = new ContainerModule((bind, _unbind
     bind(BitbucketServerAuthProvider).toSelf().inSingletonScope();
     bind(AuthProvider).to(BitbucketServerAuthProvider).inSingletonScope();
     bind(BitbucketTokenHelper).toSelf().inSingletonScope();
+    bind(BitbucketApiFactory).toSelf().inSingletonScope();
     // bind(BitbucketTokenValidator).toSelf().inSingletonScope(); // TODO
     // bind(IGitTokenValidator).toService(BitbucketTokenValidator);
 });
