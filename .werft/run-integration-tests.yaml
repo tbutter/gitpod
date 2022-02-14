@@ -8,6 +8,9 @@ args:
 - name: username
   desc: "The username to run the integration test with"
   required: false
+- name: testPattern
+  desc: "The test file pattern to filter the tests to run"
+  required: false
 pod:
   serviceAccount: werft
   nodeSelector:
@@ -70,7 +73,14 @@ pod:
       fi
       echo "[prep] using username: $USERNAME"
 
+      TEST_PATTERN="{{ .Annotations.testPattern }}"
+      if [[ "$TEST_PATTERN" == "<no value>" ]]; then
+        TEST_PATTERN=""
+      fi
+      echo "[prep] using testPattern: $TEST_PATTERN"
+
       args=()
+      [[ "$TEST_PATTERN" != "" ]] && args+=( "-testPattern=$TEST_PATTERN" )
       args+=( '-kubeconfig=/config/kubeconfig' )
       args+=( "-namespace={{ .Annotations.namespace }}" )
       [[ "$USERNAME" != "" ]] && args+=( "-username=$USERNAME" )

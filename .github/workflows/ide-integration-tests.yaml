@@ -1,0 +1,35 @@
+name: Code Nightly
+
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows: ["Code Nightly"]
+    types: [completed]
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Auth Google Cloud SDK
+        uses: google-github-actions/auth@v0
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v0
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+      - run: |
+          sleep 90s
+          gcloud auth configure-docker --quiet
+          
+          # TODO
+          werft run github -j .werft/run-integration-tests.yaml -a testPattern=ide.test -a namespace=staging-gpl-2658-int-tests -a version=gpl-2658-int-tests.57 -f
+
+      - name: Slack Notification
+        if: always()
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.IDE_SLACK_WEBHOOK }}
+          SLACK_COLOR: ${{ job.status }}

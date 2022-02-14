@@ -19,6 +19,5 @@ RUN curl -fsSL "https://storage.googleapis.com/kubernetes-release/release/$(curl
   && chmod +x /usr/local/bin/kubectl
 
 COPY test--app/bin /tests
-ENV PATH=$PATH:/tests
 COPY entrypoint.sh /entrypoint.sh
 ENTRYPOINT [ "/entrypoint.sh" ]

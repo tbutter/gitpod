@@ -16,11 +16,12 @@ import (
 var (
 	testEnv    env.Environment
 	username   string
+	userToken  string
 	namespace  string
 	kubeconfig string
 )
 
 func TestMain(m *testing.M) {
-	username, namespace, testEnv, _, kubeconfig, _ = integration.Setup(context.Background())
+	username, userToken, namespace, testEnv, _, kubeconfig, _ = integration.Setup(context.Background())
 	os.Exit(testEnv.Run(m))
 }

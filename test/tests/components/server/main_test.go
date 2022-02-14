@@ -22,6 +22,6 @@ var (
 )
 
 func TestMain(m *testing.M) {
-	username, namespace, testEnv, enterprise, kubeconfig, _ = integration.Setup(context.Background())
+	username, _, namespace, testEnv, enterprise, kubeconfig, _ = integration.Setup(context.Background())
 	os.Exit(testEnv.Run(m))
 }

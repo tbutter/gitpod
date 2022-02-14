@@ -51,8 +51,7 @@ func TestPythonExtWorkspace(t *testing.T) {
 				api.Done(t)
 			})
 
-			username = "integrationTestUser"
-			userId, err := api.CreateUser(username, "")
+			userId, err := api.CreateUser(username, userToken)
 			if err != nil {
 				t.Fatal(err)
 			}

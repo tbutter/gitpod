@@ -59,9 +59,10 @@ func EnsureUserExists(t *testing.T, username string, api *ComponentAPI) string {
 	return username
 }
 
-func Setup(ctx context.Context) (string, string, env.Environment, bool, string, bool) {
+func Setup(ctx context.Context) (string, string, string, env.Environment, bool, string, bool) {
 	var (
 		username        string
+		userToken       string
 		enterprise      bool
 		gitlab          bool
 		waitGitpodReady time.Duration
@@ -78,6 +79,7 @@ func Setup(ctx context.Context) (string, string, env.Environment, bool, string, 
 	klog.InitFlags(flagset)
 
 	flagset.StringVar(&username, "username", "", "username to execute the tests with. Chooses one automatically if left blank.")
+	flagset.StringVar(&userToken, "userToken", "", "userToken to create a new user.")
 	flagset.BoolVar(&enterprise, "enterprise", false, "whether to test enterprise features. requires enterprise lisence installed.")
 	flagset.BoolVar(&gitlab, "gitlab", false, "whether to test gitlab integration.")
 	flagset.DurationVar(&waitGitpodReady, "wait-gitpod-timeout", 5*time.Minute, `wait time for Gitpod components before starting integration test`)
@@ -124,7 +126,7 @@ func Setup(ctx context.Context) (string, string, env.Environment, bool, string, 
 		waitOnGitpodRunning(e.Namespace(), waitGitpodReady),
 	)
 
-	return username, e.Namespace(), testenv, enterprise, kubeconfig, gitlab
+	return username, userToken, e.Namespace(), testenv, enterprise, kubeconfig, gitlab
 }
 
 func waitOnGitpodRunning(namespace string, waitTimeout time.Duration) env.Func {
