@@ -7,7 +7,7 @@ defaultArgs:
   jbMarketplacePublishTrigger: "false"
   publishToJBMarketplace: true
   localAppVersion: unknown
-  codeCommit: aadfc1fa976af98a378ddeec7c7a7165669432cb
+  codeCommit: a4ad33e04634458f9ed6406b0e9dc2e7213cc291
   intellijDownloadUrl: "https://download.jetbrains.com/idea/ideaIU-2021.3.2.tar.gz"
   golandDownloadUrl: "https://download.jetbrains.com/go/goland-2021.3.3.tar.gz"
   pycharmDownloadUrl: "https://download.jetbrains.com/python/pycharm-professional-2021.3.2.tar.gz"
