@@ -2346,7 +2346,7 @@ export class GitpodServerImpl implements GitpodServerWithTracing, Disposable {
         //only make track call if at least one identifier is known
         if (this.user || event.anonymousId) {
             const trackMessage: TrackMessage = {
-                userId: this.user.id,
+                userId: this.user?.id,
                 anonymousId: event.anonymousId,
                 event: event.event,
                 messageId: event.messageId,
@@ -2359,8 +2359,9 @@ export class GitpodServerImpl implements GitpodServerWithTracing, Disposable {
 
     public async trackLocation(ctx: TraceContext, event: RemotePageMessage): Promise<void> {
         //only make page call if at least one identifier is known
-        if(this.user.id || event.anonymousId) {
+        if(this.user || event.anonymousId) {
             const pageMessage: PageMessage = {
+                userId: this.user?.id,
                 anonymousId: event.anonymousId,
                 messageId: event.messageId,
                 context: {},
