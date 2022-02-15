@@ -1,4 +1,4 @@
-name: Code Nightly
+name: IDE integration tests
 
 on:
   workflow_dispatch:
