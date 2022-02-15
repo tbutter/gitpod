@@ -2,9 +2,10 @@ name: IDE integration tests
 
 on:
   workflow_dispatch:
-  workflow_run:
-    workflows: ["Code Nightly"]
-    types: [completed]
+
+  # workflow_run:
+  #   workflows: ["Code Nightly"]
+  #   types: [completed]
 
 jobs:
 
@@ -21,7 +22,6 @@ jobs:
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
       - run: |
-          sleep 90s
           gcloud auth configure-docker --quiet
 
           # this is because we don't want to increate gitpod-build-main number, we can choose a name
@@ -33,9 +33,9 @@ jobs:
           # final we remove the temp preview environment
           werft run github -a namespace=staging-test-1 --remote-job-path .werft/wipe-devstaging.yaml github.com/gitpod-io/gitpod:main
 
-      - name: Slack Notification
-        if: always()
-        uses: rtCamp/action-slack-notify@v2
-        env:
-          SLACK_WEBHOOK: ${{ secrets.IDE_SLACK_WEBHOOK }}
-          SLACK_COLOR: ${{ job.status }}
+      # - name: Slack Notification
+      #   if: always()
+      #   uses: rtCamp/action-slack-notify@v2
+      #   env:
+      #     SLACK_WEBHOOK: ${{ secrets.IDE_SLACK_WEBHOOK }}
+      #     SLACK_COLOR: ${{ job.status }}
