@@ -1,8 +1,8 @@
-import { Werft } from '../util/werft';
+import { Werft } from './util/werft';
 import * as fs from 'fs';
-import * as Tracing from '../observability/tracing';
+import * as Tracing from './observability/tracing';
 import { SpanStatusCode } from '@opentelemetry/api';
-import { wipePreviewEnvironmentAndNamespace, helmInstallName, listAllPreviewNamespaces } from '../util/kubectl';
+import { wipePreviewEnvironmentAndNamespace, helmInstallName, listAllPreviewNamespaces } from './util/kubectl';
 import { exec, ExecOptions } from './shell';
 
 // Will be set once tracing has been initialized
@@ -76,7 +76,7 @@ function previewHasBranch(branch: string, preview: string): boolean {
     return false
 }
 
-export function parseBranch(branch: string): string {
+function parseBranch(branch: string): string {
 
     return "version"
 }
