@@ -38,10 +38,13 @@ export type RemoteTrackMessage = Omit<TrackMessage, "timestamp" | "userId" | "an
     anonymousId?: string | number;
 };
 export type RemotePageMessage = Omit<PageMessage, "timestamp" | "userId"> & {
+    includePII?: boolean;
     anonymousId?: string | number;
 };
 
-export type RemoteIdentifyMessage = Omit<IdentifyMessage, "timestamp" | "userId" | "anonymousId">;
+export type RemoteIdentifyMessage = Omit<IdentifyMessage, "timestamp" | "userId" | "anonymousId"> & {
+    anonymousId?: string | number;
+};
 
 export interface IAnalyticsWriter {
 

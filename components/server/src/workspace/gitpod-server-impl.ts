@@ -2342,59 +2342,38 @@ export class GitpodServerImpl implements GitpodServerWithTracing, Disposable {
         //         the wire and we have no idea what's in it. Even passing the context and properties directly
         //         is questionable. Considering we're handing down the msg and do not know how the analytics library
         //         handles potentially broken or malicious input, we better err on the side of caution.
-        const msg = {
-            event: event.event,
-            messageId: event.messageId,
-            context: event.context,
-            properties: event.properties
-        }
 
-        //either the user is authenticated...
-        if (this.user) {
+        //only make track call if at least one identifier is known
+        if (this.user || event.anonymousId) {
             const trackMessage: TrackMessage = {
                 userId: this.user.id,
                 anonymousId: event.anonymousId,
-                ...msg
-            }
-            this.analytics.track(trackMessage);
-            return;
-        }
-
-        //... or an anonymous id was passed. else, no tracking call is made
-        if (event.anonymousId) {
-            const trackMessage: TrackMessage = {
-                anonymousId: event.anonymousId,
-                ...msg
+                event: event.event,
+                messageId: event.messageId,
+                context: event.context,
+                properties: event.properties
             }
             this.analytics.track(trackMessage);
         };
     }
 
     public async trackLocation(ctx: TraceContext, event: RemotePageMessage): Promise<void> {
-        //either an anonymousId was passed, signifying that we want to make a privacy preserving page call...
-        if (event.anonymousId) {
-            // we are making a reduced page call that respects user's privacy by not using any PII
-            this.analytics.page({
+        //only make page call if at least one identifier is known
+        if(this.user.id || event.anonymousId) {
+            const pageMessage: PageMessage = {
                 anonymousId: event.anonymousId,
                 messageId: event.messageId,
                 context: {},
                 properties: event.properties
-            });
-            return;
-        }
-
-        //...or we associate the page call with the authenticated user. else no page call is made.
-        if (this.user) {
-            const msg: PageMessage = {
-                userId: this.user.id,
-                messageId: event.messageId,
-                context: {
+            }
+            //only include PII if the authorisation was explicitly passed (e.g. because the user is authenticated and agreed to ToS)
+            if (!!event.includePII) {
+                pageMessage.context =  {
                     ip: this.clientHeaderFields?.ip,
                     userAgent: this.clientHeaderFields?.userAgent
-                },
-                properties: event.properties,
+                };
             }
-            this.analytics.page(msg);
+            this.analytics.page(pageMessage);
         }
     }
 
@@ -2404,12 +2383,13 @@ export class GitpodServerImpl implements GitpodServerWithTracing, Disposable {
         //Identify calls collect user informmation. If the user is unknown, we don't make a call (privacy preservation)
         const user = this.checkUser("IdentifyUser");
 
-        const msg: IdentifyMessage = {
+        const identifyMessage: IdentifyMessage = {
             userId: user.id,
+            anonymousId: event.anonymousId,
             traits: event.traits,
             context: event.context
         };
-        this.analytics.identify(msg);
+        this.analytics.identify(identifyMessage);
     }
 
     async getTerms(ctx: TraceContext): Promise<Terms> {
