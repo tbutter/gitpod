@@ -964,9 +964,13 @@ export class WorkspaceStarter {
             const init = new PrebuildInitializer();
             init.setPrebuild(snapshot);
             if (initializer instanceof CompositeInitializer) {
-                init.setComposite(initializer);
+                for (const myInit of initializer.getInitializerList()) {
+                    if (myInit instanceof GitInitializer) {
+                        init.addGit(myInit);
+                    }
+                }
             } else {
-                init.setGit(initializer);
+                init.addGit(initializer);
             }
             result.setPrebuild(init);
         } else if (WorkspaceProbeContext.is(context)) {
