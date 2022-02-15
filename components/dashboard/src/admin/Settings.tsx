@@ -8,10 +8,10 @@ import { useContext } from "react";
 import { InstallationAdminSettings } from "@gitpod/gitpod-protocol";
 import { AdminContext } from "../admin-context";
 import CheckBox from "../components/CheckBox";
-import InfoBox from "../components/InfoBox";
 import { PageWithSubMenu } from "../components/PageWithSubMenu";
 import { getGitpodService } from "../service/service";
 import { adminMenu } from "./admin-menu";
+import CodeText from "../components/CodeText";
 
 export default function Settings() {
     const { adminSettings, setAdminSettings } = useContext(AdminContext);
@@ -37,7 +37,7 @@ export default function Settings() {
                         sendTelemetry: evt.target.checked,
                     })} />
 
-                <InfoBox>{telemetryData()}</InfoBox>
+                <CodeText>{telemetryData()}</CodeText>
             </PageWithSubMenu>
         </div >
     )
