@@ -2344,9 +2344,10 @@ export class GitpodServerImpl implements GitpodServerWithTracing, Disposable {
         //         handles potentially broken or malicious input, we better err on the side of caution.
 
         //only make track call if at least one identifier is known
-        if (this.user?.id || event.anonymousId) {
+        const userId = this.user?.id;
+        if (userId || event.anonymousId) {
             const trackMessage: TrackMessage = {
-                userId: this.user?.id,
+                userId: userId,
                 anonymousId: event.anonymousId,
                 event: event.event,
                 messageId: event.messageId,
@@ -2359,9 +2360,10 @@ export class GitpodServerImpl implements GitpodServerWithTracing, Disposable {
 
     public async trackLocation(ctx: TraceContext, event: RemotePageMessage): Promise<void> {
         //only make page call if at least one identifier is known
-        if(this.user?.id || event.anonymousId) {
+        const userId = this.user?.id;
+        if(userId || event.anonymousId) {
             const pageMessage: PageMessage = {
-                userId: this.user?.id,
+                userId: userId,
                 anonymousId: event.anonymousId,
                 messageId: event.messageId,
                 context: {},
