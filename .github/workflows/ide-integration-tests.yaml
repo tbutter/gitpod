@@ -23,9 +23,15 @@ jobs:
       - run: |
           sleep 90s
           gcloud auth configure-docker --quiet
-          
-          # TODO
-          werft run github -j .werft/run-integration-tests.yaml -a testPattern=ide.test -a namespace=staging-gpl-2658-int-tests -a version=gpl-2658-int-tests.57 -f
+
+          # this is because we don't want to increate gitpod-build-main number, we can choose a name
+          cp .werft/build.yaml .werft/test.yaml
+          # version is actual namespace that werft is build, --job-file should be same with above
+          werft run github -a version=staging-test-1 --job-file .werft/test.yaml github.com/gitpod-io/gitpod:main
+          # run test
+          werft run github -j .werft/run-integration-tests.yaml -a testPattern=ide.test -a namespace=staging-test-1 -a version=gitpod-test-main.1 -f
+          # final we remove the temp preview environment
+          werft run github -a namespace=staging-test-1 --remote-job-path .werft/wipe-devstaging.yaml github.com/gitpod-io/gitpod:main
 
       - name: Slack Notification
         if: always()

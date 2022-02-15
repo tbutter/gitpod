@@ -8,6 +8,9 @@ args:
 - name: username
   desc: "The username to run the integration test with"
   required: false
+- name: userToken
+  desc: "The user token to create a new user with username"
+  required: false
 - name: testPattern
   desc: "The test file pattern to filter the tests to run"
   required: false
@@ -73,6 +76,11 @@ pod:
       fi
       echo "[prep] using username: $USERNAME"
 
+      USER_TOKEN="{{ .Annotations.userToken }}"
+      if [[ "$USER_TOKEN" == "<no value>" ]]; then
+        USER_TOKEN=""
+      fi
+
       TEST_PATTERN="{{ .Annotations.testPattern }}"
       if [[ "$TEST_PATTERN" == "<no value>" ]]; then
         TEST_PATTERN=""
@@ -84,7 +92,7 @@ pod:
       args+=( '-kubeconfig=/config/kubeconfig' )
       args+=( "-namespace={{ .Annotations.namespace }}" )
       [[ "$USERNAME" != "" ]] && args+=( "-username=$USERNAME" )
-      echo "[prep] args: ${args[@]}"
+      [[ "$USER_TOKEN" != "" ]] && args+=( "-userToken=$USER_TOKEN" )
       echo "[prep|DONE]"
 
       /entrypoint.sh "${args[@]}" 2>&1 | ts "[int-tests] "
