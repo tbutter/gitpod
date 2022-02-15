@@ -8,6 +8,7 @@ import { useContext } from "react";
 import { InstallationAdminSettings } from "@gitpod/gitpod-protocol";
 import { AdminContext } from "../admin-context";
 import CheckBox from "../components/CheckBox";
+import InfoBox from "../components/InfoBox";
 import { PageWithSubMenu } from "../components/PageWithSubMenu";
 import { getGitpodService } from "../service/service";
 import { adminMenu } from "./admin-menu";
@@ -18,6 +19,10 @@ export default function Settings() {
     const actuallySetTelemetryPrefs = async (value: InstallationAdminSettings) => {
         await getGitpodService().server.adminUpdateSettings(value);
         setAdminSettings(value);
+    }
+
+    const telemetryData = async () => {
+        await getGitpodService().server.adminGetTelemetryData();
     }
 
     return (
@@ -31,6 +36,8 @@ export default function Settings() {
                     onChange={(evt) => actuallySetTelemetryPrefs({
                         sendTelemetry: evt.target.checked,
                     })} />
+
+                <InfoBox>{telemetryData()}</InfoBox>
             </PageWithSubMenu>
         </div >
     )
