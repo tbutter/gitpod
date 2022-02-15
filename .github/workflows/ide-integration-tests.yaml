@@ -2,7 +2,11 @@ name: IDE integration tests
 
 on:
   workflow_dispatch:
-
+  push:
+    branches:
+      - 'jp/run-integration-test'
+    # paths:
+    #   - '**.js'
   # workflow_run:
   #   workflows: ["Code Nightly"]
   #   types: [completed]
@@ -29,7 +33,7 @@ jobs:
           # version is actual namespace that werft is build, --job-file should be same with above
           werft run github -a version=staging-test-1 --job-file .werft/test.yaml github.com/gitpod-io/gitpod:main
           # run test
-          werft run github -j .werft/run-integration-tests.yaml -a testPattern=ide.test -a namespace=staging-test-1 -a version=gitpod-test-main.1 -f
+          werft run github -j .werft/run-integration-tests.yaml -a testPattern=ide.test -a namespace=staging-test-1 -a version=gitpod-test-main.1 -a username=test_user -a userToken=${{ secrets.GITHUB_TOKEN }} -f
           # final we remove the temp preview environment
           werft run github -a namespace=staging-test-1 --remote-job-path .werft/wipe-devstaging.yaml github.com/gitpod-io/gitpod:main
 
