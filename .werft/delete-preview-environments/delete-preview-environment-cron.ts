@@ -27,10 +27,12 @@ Tracing.initialize()
 async function deletePreviewEnvironments() {
     werft.phase("Fetching branches");
     const branches = getAllBranches();
+    werft.log("Fetching branches", branches.toString())
     werft.done("Fetching branches");
 
     werft.phase("Fetching previews");
     const previews = listAllPreviewNamespaces({});
+    werft.log("Fetching previews", previews.toString())
     werft.done("Fetching previews");
 
     werft.phase("Mapping previews => branches")
@@ -46,6 +48,7 @@ async function deletePreviewEnvironments() {
             previewBranchMap.set(preview, "")
         }
     });
+    werft.log("Mapping previews", JSON.stringify(previewBranchMap))
     werft.done("Mapping previews => branches")
 
     werft.phase("deleting previews")
@@ -74,10 +77,6 @@ function previewHasBranch(branch: string, preview: string): boolean {
 }
 
 export function parseBranch(branch: string): string {
-    let version = context.Name;
-    const PREFIX_TO_STRIP = "gitpod-delete-preview-environment-";
-    if (version.substr(0, PREFIX_TO_STRIP.length) === PREFIX_TO_STRIP) {
-        version = version.substr(PREFIX_TO_STRIP.length);
-    }
-    return version
+
+    return "version"
 }
