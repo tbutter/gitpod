@@ -11,7 +11,6 @@ import CheckBox from "../components/CheckBox";
 import { PageWithSubMenu } from "../components/PageWithSubMenu";
 import { getGitpodService } from "../service/service";
 import { adminMenu } from "./admin-menu";
-import CodeText from "../components/CodeText";
 
 export default function Settings() {
     const { adminSettings, setAdminSettings } = useContext(AdminContext);
@@ -37,7 +36,7 @@ export default function Settings() {
                         sendTelemetry: evt.target.checked,
                     })} />
 
-                <CodeText>{telemetryData()}</CodeText>
+                <p>{telemetryData()}</p>
             </PageWithSubMenu>
         </div >
     )
