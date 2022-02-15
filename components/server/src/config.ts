@@ -41,6 +41,11 @@ export interface WorkspaceGarbageCollection {
     contentChunkLimit: number;
 }
 
+enum LicenseType {
+    Legacy = 'legacy',
+    Replicated = 'replicated',
+}
+
 /**
  * This is the config shape as found in the configuration file, e.g. server-configmap.yaml
  */
@@ -56,6 +61,9 @@ export interface ConfigSerialized {
     // Use one or other - licenseFile reads from a file and populates license
     license?: string;
     licenseFile?: string;
+
+    licenseType?: LicenseType;
+    LicenseTypeFile?: string; // Value written to file
 
     workspaceHeartbeat: {
         intervalSeconds: number;
@@ -195,6 +203,18 @@ export namespace ConfigFile {
         if (licenseFile) {
             license = fs.readFileSync(filePathTelepresenceAware(licenseFile), "utf-8");
         }
+        let licenseType = config.licenseType;
+        const licenseTypeFile = config.LicenseTypeFile;
+        if (licenseTypeFile) {
+            // Default to legacy
+            licenseType = LicenseType.Legacy;
+
+            const licenseTypeFileData = fs.readFileSync(filePathTelepresenceAware(licenseTypeFile), "utf-8") as LicenseType;
+            if (Object.values(LicenseType).includes(licenseTypeFileData)) {
+                // Valid licensor type
+                licenseType = licenseTypeFileData;
+            }
+        }
         return {
             ...config,
             stage: translateLegacyStagename(config.stage),
@@ -203,6 +223,7 @@ export namespace ConfigFile {
             builtinAuthProvidersConfigured,
             chargebeeProviderOptions,
             license,
+            licenseType,
             workspaceGarbageCollection: {
                 ...config.workspaceGarbageCollection,
                 startDate: config.workspaceGarbageCollection.startDate ? new Date(config.workspaceGarbageCollection.startDate).getTime() : Date.now(),
