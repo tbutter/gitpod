@@ -2353,6 +2353,7 @@ export class GitpodServerImpl implements GitpodServerWithTracing, Disposable {
         if (this.user) {
             const trackMessage: TrackMessage = {
                 userId: this.user.id,
+                anonymousId: event.anonymousId,
                 ...msg
             }
             this.analytics.track(trackMessage);
